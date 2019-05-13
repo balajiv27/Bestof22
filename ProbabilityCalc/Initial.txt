@@ -1,0 +1,102 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProbabilityCalc
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            
+            string path = @"D:\Balaji\Personal\probability.xlsx";
+            ExcelData getData = new ExcelData();
+            List<Boxes> lstBoxes = getData.ReadExcel(path);
+            const int crLimit = 100;
+            
+            int count,wkCount=0,btCount=0,blCount=0,alCount=0;
+            double wkCredit=0, btCredit=0, blCredit=0, alCredit=0;
+            double curCredit = 0;
+            List<Boxes> teams = new List<Boxes>();
+            var hold = lstBoxes.OrderByDescending(x=>x.priority).ThenByDescending(x => x.point)
+                 .ThenBy(x => x.credit)
+                 .ToList();
+            var totalCredits = lstBoxes.Sum(x => x.credit);
+
+            foreach (var item in hold)
+            {
+                if (curCredit + item.credit <= crLimit)
+                {
+                    Boxes team = new Boxes();
+                    team.name = item.name;
+                    team.credit = item.credit;
+                    curCredit += item.credit;
+                    if(item.type=="wk" && wkCount==0)
+                    {
+                        wkCredit+= item.credit;
+                        teams.Add(team);
+                    }
+                    else if(item.type=="al" && alCount<3 && alCount<30)
+                    {
+                        alCredit += item.credit;
+                        teams.Add(team);
+                    }
+                    else if (item.type == "bt" && btCount < 5 && btCount <45)
+                    {
+                        btCredit += item.credit;
+                        teams.Add(team);
+                    }
+                    else if (item.type == "cl" && blCount < 3 && blCount <45)
+                    {
+                        blCredit += item.credit;
+                        teams.Add(team);
+                    }
+                    switch (item.type)
+                    {
+                        case "wk":
+                            wkCount++;
+                            break;
+                        case "al":
+                            alCount++;
+                            break;
+                        case "bt":
+                            btCount++;
+                            break;
+                        case "cl":
+                            blCount++;
+                            break;
+                    }
+                }
+            }
+            //string test;
+
+            foreach (var item in teams)
+            {
+                Console.WriteLine("\n\tName:" + item.name + "\t Credit:" + item.credit);
+            }
+            Console.WriteLine("\n\tTotal credit : " + curCredit);
+            Console.Read();
+        }
+
+
+
+
+     
+    }
+
+    public class Boxes
+    {
+        public string name;
+        public double credit;
+        public double point;
+        public string type;
+        public int priority;
+        public bool isPlaying;
+        public string team;
+    }
+}
